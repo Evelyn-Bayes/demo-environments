@@ -76,6 +76,7 @@ services:
     container_name: xinfra
     image: localbuild/xinfra
     hostname: xinfra
+    restart: on-failure:3
     environment:
       KAFKA_OPTS: -javaagent:/jmxexporter/jmx_prometheus_javaagent-0.17.0.jar=9989:/volumes/xinfra.yml
     volumes:
@@ -89,6 +90,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.36.2
     container_name: prometheus
+    restart: on-failure:3
     ports:
       - 9090:9090
     volumes:
@@ -97,6 +99,7 @@ services:
   grafana:
     image: grafana/grafana:9.0.2
     container_name: grafana
+    restart: on-failure:3
     environment:
       - "GF_SECURITY_ADMIN_USER=admin"
       - "GF_SECURITY_ADMIN_PASSWORD=password"

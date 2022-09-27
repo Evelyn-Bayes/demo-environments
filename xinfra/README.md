@@ -4,6 +4,7 @@ Run the below from your git directory:
 git clone git@github.com:Evelyn-Bayes/kafka-monitor.git
 cd kafka-monitor
 ./gradlew jar
+cp <demo-environments-dir>/xinfra/xinfra-monitor.properties ./config/xinfra-monitor.properties
 cd docker
 export PREFIX=localbuild/xinfra
 export TAG=latest
