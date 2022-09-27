@@ -1,0 +1,114 @@
+---
+version: '3.8'
+services:
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:7.0.0
+    restart: on-failure:3
+    hostname: zookeeper
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-txn-logs:/var/lib/zookeeper/log
+  
+  kafka1:
+    container_name: kafka1
+    image: confluentinc/cp-kafka:7.0.0
+    hostname: kafka1
+    ports:
+      - 9092:9092
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_LOG4J_LOGGERS: state.change.logger=INFO
+    volumes:
+      - kafka1-data:/var/lib/kafka/data
+    depends_on:
+      - zookeeper
+
+  kafka2:
+    container_name: kafka2
+    image: confluentinc/cp-kafka:7.0.0
+    hostname: kafka2
+    ports:
+      - 19092:19092
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:19092
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_LOG4J_LOGGERS: state.change.logger=INFO
+    volumes:
+      - kafka2-data:/var/lib/kafka/data
+    depends_on:
+      - zookeeper
+
+  kafka3:
+    container_name: kafka3
+    image: confluentinc/cp-kafka:7.0.0
+    hostname: kafka3
+    ports:
+      - 29092:29092
+    restart: on-failure:3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:29092
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_LOG4J_LOGGERS: state.change.logger=INFO
+    volumes:
+      - kafka3-data:/var/lib/kafka/data
+    depends_on:
+      - zookeeper
+
+  xinfra:
+    container_name: xinfra
+    image: localbuild/xinfra
+    hostname: xinfra
+    environment:
+      KAFKA_OPTS: -javaagent:/jmxexporter/jmx_prometheus_javaagent-0.17.0.jar=9989:/volumes/xinfra.yml
+    volumes:
+      - ${PWD}/volumes/xinfra:/volumes
+      - ${PWD}/volumes/jmxexporter:/jmxexporter
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+
+  prometheus:
+    image: prom/prometheus:v2.36.2
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ${PWD}/volumes/prometheus/:/etc/prometheus
+
+  grafana:
+    image: grafana/grafana:9.0.2
+    container_name: grafana
+    environment:
+      - "GF_SECURITY_ADMIN_USER=admin"
+      - "GF_SECURITY_ADMIN_PASSWORD=password"
+      - "GF_USERS_ALLOW_SIGN_UP=false"
+    ports:
+      - 3000:3000
+    volumes:
+      - ${PWD}/volumes/grafana/:/etc/grafana/provisioning
+
+volumes:
+  zookeeper-data:
+  zookeeper-txn-logs:
+  kafka1-data:
+  kafka2-data:
+  kafka3-data:

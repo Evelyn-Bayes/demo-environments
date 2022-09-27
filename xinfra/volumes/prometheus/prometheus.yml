@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 60s
+  evaluation_interval: 15s
+  scrape_timeout: 30s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "xinfra"
+    static_configs:
+      - targets:
+          - "xinfra:9989"
+        labels:
+          env: "PROD"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: hostname
+        regex: '([^:]+)(:[0-9]+)?'
+        replacement: '${1}'
